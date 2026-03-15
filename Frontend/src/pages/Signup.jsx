@@ -1,55 +1,92 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import axios from "axios";
+import { AuthContext } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 function Signup() {
 
-  const [name,setName] = useState("");
-  const [email,setEmail] = useState("");
-  const [password,setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleSignup = async () => {
+  const { setToken } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  const handleSignup = async (e) => {
+
+    e.preventDefault();
+
     try {
 
-      const res = await axios.post("http://localhost:5000/api/auth/signup",{
-        name,
-        email,
-        password
-      });
+      const res = await axios.post(
+        "http://localhost:5000/api/auth/signup",
+        {
+          name,
+          email,
+          password
+        }
+      );
 
-      alert("Signup successful");
+      const token = res.data.token;
 
-    } catch(err){
-      console.log(err);
+      localStorage.setItem("token", token);
+      setToken(token);
+
+      navigate("/");
+
+    } catch (error) {
+
+      alert("Signup failed");
+
     }
+
   };
 
   return (
-    <div>
+
+    <div style={{ padding: "40px" }}>
 
       <h2>Signup</h2>
 
-      <input
-      placeholder="Name"
-      onChange={(e)=>setName(e.target.value)}
-      />
+      <form onSubmit={handleSignup}>
 
-      <input
-      placeholder="Email"
-      onChange={(e)=>setEmail(e.target.value)}
-      />
+        <input
+          type="text"
+          placeholder="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
 
-      <input
-      type="password"
-      placeholder="Password"
-      onChange={(e)=>setPassword(e.target.value)}
-      />
+        <br /><br />
 
-      <button onClick={handleSignup}>
-        Signup
-      </button>
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+
+        <br /><br />
+
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+
+        <br /><br />
+
+        <button type="submit">
+          Signup
+        </button>
+
+      </form>
 
     </div>
+
   );
+
 }
 
 export default Signup;
