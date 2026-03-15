@@ -3,6 +3,7 @@ import authMiddleware from "../middlewares/authMiddleware.js";
 
 import {
   getBalance,
+  getUsers,
   transferMoney,
   getStatement
 } from "../controllers/accountController.js";
@@ -10,6 +11,7 @@ import {
 const router = express.Router();
 
 router.get("/balance", authMiddleware, getBalance);
+router.get("/users", authMiddleware, getUsers);
 router.post("/transfer", authMiddleware, transferMoney);
 router.get("/statement", authMiddleware, getStatement);
 

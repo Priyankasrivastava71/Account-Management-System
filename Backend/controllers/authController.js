@@ -1,10 +1,14 @@
 import supabase from "../config/supabaseClient.js";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 export const signup = async (req, res) => {
 
   const { name, email, password } = req.body;
+
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: "All fields required" });
+  }
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -18,34 +22,54 @@ export const signup = async (req, res) => {
         balance: 10000
       }
     ])
-    .select();
+    .select()
+    .single();
 
-  if (error) return res.status(400).json(error);
+  if (error) {
+    return res.status(400).json(error);
+  }
 
-  res.json({ message: "User created" });
+  const token = jwt.sign(
+    { id: data.id },
+    "secretkey",
+    { expiresIn: "1d" }
+  );
+
+  res.json({ token });
 };
+
+
 
 export const login = async (req, res) => {
 
   const { email, password } = req.body;
 
-  const { data, error } = await supabase
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email and password required" });
+  }
+
+  const { data: user, error } = await supabase
     .from("users")
     .select("*")
     .eq("email", email)
-    .single();
+    .maybeSingle();
 
-  if (!data) return res.status(400).json({ message: "User not found" });
+  if (!user) {
+    return res.status(400).json({ message: "User not found" });
+  }
 
-  const isMatch = await bcrypt.compare(password, data.password);
+  const validPassword = await bcrypt.compare(password, user.password);
 
-  if (!isMatch) return res.status(400).json({ message: "Wrong password" });
+  if (!validPassword) {
+    return res.status(400).json({ message: "Incorrect password" });
+  }
 
   const token = jwt.sign(
-    { id: data.id, email: data.email },
-    process.env.JWT_SECRET,
+    { id: user.id },
+    "secretkey",
     { expiresIn: "1d" }
   );
 
   res.json({ token });
+
 };
